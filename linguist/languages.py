@@ -10,7 +10,7 @@ Defines all Languages known to GitHub.
 All languages have an associated lexer for syntax highlighting. It
 defaults to name.downcase, which covers most cases.
 
-type              - Either data, programming, markup, or nil
+type              - Either data, programming, markup, documentation, build or nil
 lexer             - An explicit lexer String (defaults to name)
 aliases           - An Array of additional aliases (implicitly
                     includes name.downcase)
@@ -57,12 +57,29 @@ languages = \
         ],
         "primary_extension": ".asp",
         "extensions": [
+            ".asa"
+        ]
+    },
+    "ASP.NET": {
+        "type": "programming",
+        "color": "#6a40fd",
+        "lexer": "aspx-vb",
+        "search_term": "aspx-vb",
+        "aliases": [
+            "aspx",
+            "aspx-vb"
+        ],
+        "primary_extension": ".aspx",
+        "extensions": [
             ".asax",
             ".ascx",
             ".ashx",
             ".asmx",
-            ".aspx",
-            ".axd"
+            ".master",
+            ".axd",
+            ".cshtml",
+            ".razor"
+
         ]
     },
     "ActionScript": {
@@ -73,15 +90,15 @@ languages = \
         "aliases": [
             "as3"
         ],
-        "primary_extension": ".as"
+        "primary_extension": ".as",
+        "extensions": [
+            ".mxml"
+        ]
     },
     "Ada": {
         "type": "programming",
         "color": "#02f88c",
-        "primary_extension": ".adb",
-        "extensions": [
-            ".ads"
-        ]
+        "primary_extension": ".adb"
     },
     "Agda": {
         "type": "programming",
@@ -177,11 +194,6 @@ languages = \
     "Befunge": {
         "primary_extension": ".befunge"
     },
-    "BIRT": {
-        "type": "programming",
-        "color": "#98BAD6",
-        "primary_extension": ".rptdesign"
-    },        
     "BlitzBasic": {
         "type": "programming",
         "aliases": [
@@ -215,15 +227,6 @@ languages = \
         "type": "programming",
         "primary_extension": ".bro"
     },
-    "C": {
-        "type": "programming",
-        "color": "#555",
-        "primary_extension": ".c",
-        "extensions": [
-            ".w",
-            ".pc"
-        ]
-    },
     "C#": {
         "type": "programming",
         "ace_mode": "csharp",
@@ -248,17 +251,39 @@ languages = \
         "primary_extension": ".cpp",
         "extensions": [
             ".C",
+            ".c",
+            ".cc",
             ".c++",
             ".cxx",
-            ".H",
+            ".h",
             ".h++",
             ".hh",
             ".hpp",
             ".hxx",
-            ".ipp", 
+            '.inl',
             ".tcc",
-            ".tpp"
+            ".tpp",
+            ".pc"
         ]
+    },
+    "Cassandra Query Language": {
+        "type": "programming",
+        "primary_extension": ".cql"
+    },
+    "CASTExtraction":{
+        "type": "programming",
+        "color": "#d4bec1",
+        "primary_extension": ".castextraction"
+    },
+    "CICS(Transaction)": {
+        "type": "programming",
+        "color": "#d4bec1",
+        "primary_extension": ".csd"
+    },
+    "CICS(Screen)": {
+        "type": "programming",
+        "color": "#d4bec1",
+        "primary_extension": ".bms"
     },
     "C-ObjDump": {
         "type": "data",
@@ -274,22 +299,13 @@ languages = \
         ],
         "primary_extension": ".chs"
     },
-    "Common Gateway Interface files": {
-        "type": "programming",
-        "color": "#98BAD6",
-        "primary_extension": ".cgi"
-    }, 
-    "Configuration files": {
-        "type": "programming",
-        "color": "#98BAD6",
-        "primary_extension": ".conf"
-    },             
     "CLIPS": {
         "type": "programming",
         "lexer": "Text only",
         "primary_extension": ".clp"
     },
     "CMake": {
+        "type": "build",
         "primary_extension": ".cmake",
         "extensions": [
             ".cmake.in"
@@ -308,7 +324,16 @@ languages = \
             ".cpy"
         ]
     },
+    "Conf": {
+        "type": "data",
+        "lexer": "Text only",
+        "primary_extension": ".conf",
+        "extensions": [
+            ".config"
+        ]
+    },
     "CSS": {
+        "type": "programming",
         "ace_mode": "css",
         "color": "#1f085e",
         "primary_extension": ".css"
@@ -389,7 +414,6 @@ languages = \
         "primary_extension": ".lisp",
         "extensions": [
             ".asd",
-            ".cl",
             ".lsp",
             ".ny",
             ".podsl"
@@ -425,22 +449,9 @@ languages = \
         "primary_extension": ".pyx",
         "extensions": [
             ".pxd",
-            ".pxi"
+            ".pxi",
+            ".jy"
         ]
-    },
-    "D": {
-        "type": "programming",
-        "color": "#fcd46d",
-        "primary_extension": ".d",
-        "extensions": [
-            ".di"
-        ]
-    },
-    # CAST-extraction format
-    "DB": {
-        "type": "programming",
-        "color": "#fcd46d",
-        "primary_extension": ".src"
     },
     "D-ObjDump": {
         "type": "data",
@@ -454,6 +465,12 @@ languages = \
         "primary_extension": ".dm",
         "aliases": [
             "byond"
+        ]
+    },
+    "Docker": {
+        "type": "build",
+        "filenames": [
+            "Dockerfile"
         ]
     },
     "DOT": {
@@ -513,16 +530,6 @@ languages = \
             ".eclxml"
         ]
     },
-    "EGL": {
-        "type": "programming",
-        "color": "#8a1268",
-        "primary_extension": ".egl",
-        "lexer": "EGL",
-        "extensions": [
-            ".eglbld", 
-            ".egldd"
-        ]
-    },    
     "Eiffel": {
         "type": "programming",
         "lexer": "Text only",
@@ -558,15 +565,6 @@ languages = \
             ".emacs"
         ]
     },
-    "Entity Framework Specification": {
-        "type": "programming",
-        "color": "#c065db",
-        "primary_extension": ".csdl", 
-        "extensions": [
-            ".ssdl",
-            ".msl"
-        ]
-    },    
     "Erlang": {
         "type": "programming",
         "color": "#0faf8d",
@@ -587,6 +585,29 @@ languages = \
         "extensions": [
             ".fsi",
             ".fsx"
+        ]
+    },
+    "FORTRAN": {
+        "type": "programming",
+        "lexer": "Fortran",
+        "color": "#4d41b1",
+        "primary_extension": ".f90",
+        "extensions": [
+            ".F",
+            ".F03",
+            ".F08",
+            ".F77",
+            ".F90",
+            ".F95",
+            ".FOR",
+            ".FPP",
+            ".f",
+            ".f03",
+            ".f08",
+            ".f77",
+            ".f95",
+            ".for",
+            ".fpp"
         ]
     },
     "Factor": {
@@ -623,34 +644,6 @@ languages = \
             ".4th"
         ]
     },
-    "FORTRAN": {
-        "type": "programming",
-        "lexer": "Fortran",
-        "color": "#4d41b1",
-        "primary_extension": ".f90",
-        "extensions": [
-            ".F",
-            ".F03",
-            ".F08",
-            ".F77",
-            ".F90",
-            ".F95",
-            ".FOR",
-            ".FPP",
-            ".f",
-            ".f03",
-            ".f08",
-            ".f77",
-            ".f95",
-            ".for",
-            ".fpp"
-        ]
-    },    
-    "Apache FreeMarker Template": {
-        "type": "programming",
-        "color": "#98BAD6",
-        "primary_extension": ".ftl"
-    },          
     "GAS": {
         "type": "programming",
         "group": "Assembly",
@@ -712,6 +705,16 @@ languages = \
         "color": "#82937f",
         "primary_extension": ".gs"
     },
+    "Gradle": {
+        "type": "build",
+        "color": "#82937f",
+        "primary_extension": ".gradle",
+        "filenames": [
+            "gradlew.bat",
+            "gradlew"
+        ]
+        
+    },
     "Groff": {
         "primary_extension": ".man",
         "extensions": [
@@ -738,8 +741,15 @@ languages = \
         ],
         "primary_extension": ".gsp"
     },
+    "Gulp": {
+        "type": "build",
+        "filenames": [
+            "gulpfile.js",
+            "Gulpfile.js"
+        ]
+    },
     "HTML": {
-        "type": "markup",
+        "type": "programming",
         "ace_mode": "html",
         "aliases": [
             "xhtml"
@@ -751,7 +761,7 @@ languages = \
         ]
     },
     "HTML+Django": {
-        "type": "markup",
+        "type": "programming",
         "group": "HTML",
         "lexer": "HTML+Django/Jinja",
         "primary_extension": ".mustache",
@@ -761,7 +771,7 @@ languages = \
         ]
     },
     "HTML+ERB": {
-        "type": "markup",
+        "type": "programming",
         "group": "HTML",
         "lexer": "RHTML",
         "aliases": [
@@ -775,7 +785,7 @@ languages = \
         ]
     },
     "HTML+PHP": {
-        "type": "markup",
+        "type": "programming",
         "group": "HTML",
         "primary_extension": ".phtml"
     },
@@ -822,10 +832,15 @@ languages = \
             ".hxsl"
         ]
     },
-    "INF": {
-        "type": "data",
-        "primary_extension": ".inf"
-    },    
+    "IBM Integration Bus": {
+        "type": "programming",
+        "extensions": [
+            ".esql",
+            ".msgflow",
+            ".subflow"
+        ],
+        "primary_extension": ".esql"
+    },
     "INI": {
         "type": "data",
         "extensions": [
@@ -843,9 +858,25 @@ languages = \
             ".lidr"
         ]
     },
+    "IMS": {
+        "type": "programming",
+        "lexer": "Text only",
+        "primary_extension": ".psb",
+        "extensions": [
+            ".dbd",
+            ".mfs"
+        ]
+    },
     "Inno Setup": {
+        "type": "build",
         "primary_extension": ".iss",
         "lexer": "Text only"
+    },
+    "Indent": {
+        "type": "build",
+        "filenames": [
+            ".indent.pro"
+        ]
     },
     "IRC log": {
         "lexer": "IRC logs",
@@ -886,7 +917,8 @@ languages = \
             ".sublime-project",
             ".sublime_session",
             ".sublime-settings",
-            ".sublime-workspace"
+            ".sublime-workspace",
+            ".avsc"
         ]
     },
     "Jade": {
@@ -894,18 +926,14 @@ languages = \
         "type": "markup",
         "primary_extension": ".jade"
     },
-    "JasperReports": {
-        "type": "programming",
-        "color": "#98BAD6",
-        "primary_extension": ".jrxml"
-    },        
     "Java": {
         "type": "programming",
         "ace_mode": "java",
         "color": "#b07219",
         "primary_extension": ".java"
     },
-    "Java Server Pages": {
+    "JSP": {
+        "type": "programming",
         "group": "Java",
         "lexer": "Java Server Page",
         "search_term": "jsp",
@@ -937,6 +965,14 @@ languages = \
         ],
         "filenames": [
             "Jakefile"
+        ]
+    },
+    "JCL": {
+        "type": "programming",
+        "group": "Shell",
+        "primary_extension": ".jcl",
+        "extensions": [
+            ".prc"
         ]
     },
     "Julia": {
@@ -975,7 +1011,7 @@ languages = \
         "primary_extension": ".lasso"
     },
     "Less": {
-        "type": "markup",
+        "type": "programming",
         "group": "CSS",
         "lexer": "CSS",
         "primary_extension": ".less"
@@ -1036,8 +1072,7 @@ languages = \
         "primary_extension": ".xm",
         "extensions": [
             ".x",
-            ".xi",
-            ".xmi"
+            ".xi"
         ]
     },
     "Logtalk": {
@@ -1063,9 +1098,13 @@ languages = \
         "aliases": [
             "mumps"
         ],
-        "primary_extension": ".mumps"
+        "primary_extension": ".mumps",
+        "extensions": [
+            ".m"
+        ]
     },
     "Makefile": {
+        "type": "build",
         "aliases": [
             "make"
         ],
@@ -1077,12 +1116,7 @@ languages = \
         "filenames": [
             "makefile",
             "Makefile",
-            "GNUmakefile", 
-            "build.make", 
-            "flags.make", 
-            "depend.make",
-            "progress.make", 
-            "depend.internal", 
+            "GNUmakefile"
         ]
     },
     "Mako": {
@@ -1092,7 +1126,7 @@ languages = \
         ]
     },
     "Markdown": {
-        "type": "markup",
+        "type": "documentation",
         "lexer": "Text only",
         "ace_mode": "markdown",
         "wrap": True,
@@ -1109,6 +1143,17 @@ languages = \
         "color": "#bb92ac",
         "primary_extension": ".matlab"
     },
+    "Maven": {
+        "type": "build",
+        "color": "#bb92ac",
+        "filenames": [
+            "mvnw",
+            "mvnw.cmd",
+            "pom.xml",
+            "MavenWrapperDownloader.java",
+            "maven-wrapper.properties"
+        ]
+    },
     "Max": {
         "type": "programming",
         "color": "#ce279c",
@@ -1123,6 +1168,15 @@ languages = \
             ".maxhelp",
             ".maxpat"
         ]
+    },
+    "Microfocus APS generator": {
+        "type": "programming",
+        "primary_extension": ".aap",
+        "extensions": [
+            ".apg",
+            ".arp"
+        ]
+# some extensions where removed because too ambiguous with something else
     },
     "MiniD": {
         "searchable": False,
@@ -1257,10 +1311,7 @@ languages = \
         "type": "programming",
         "group": "C",
         "lexer": "C",
-        "primary_extension": ".cl",
-        "extensions": [
-            ".opencl"
-        ]
+        "primary_extension": ".opencl"
     },
     "OpenEdge ABL": {
         "type": "programming",
@@ -1271,6 +1322,16 @@ languages = \
         ],
         "primary_extension": ".p"
     },
+    "Oracle Service Bus": {
+        "type": "programming",
+        "primary_extension": ".pipeline",
+        "extensions": [
+            ".proxy",
+            ".wadl",
+            ".sboverview"
+        ]
+    },
+    
     "Oxygene": {
         "type": "programming",
         "lexer": "Text only",
@@ -1328,28 +1389,19 @@ languages = \
             ".lpr"
         ]
     },
-    "PL1": {
-        "type": "programming",
-        "lexer": "PL1",
-        "color": "#b0ce4f",
-        "primary_extension": ".pli",
-        "extensions": [
-            ".plc"
-        ]
-    },    
     "Perl": {
         "type": "programming",
         "ace_mode": "perl",
         "color": "#0298c3",
         "primary_extension": ".pl",
         "extensions": [
+            ".pm",
             ".PL",
             ".nqp",
             ".perl",
             ".ph",
             ".plx",
             ".pm6",
-            ".pod",
             ".psgi"
         ]
     },
@@ -1368,8 +1420,16 @@ languages = \
         "lexer": "Text only",
         "primary_extension": ".pogo"
     },
+    "PowerBuilder": {
+        "type": "programming",
+        "primary_extension": ".pbt",
+        "extensions": [
+            ".pbl"
+        ]
+    },
     "PowerShell": {
         "type": "programming",
+        "group": "Shell",
         "ace_mode": "powershell",
         "aliases": [
             "posh"
@@ -1389,9 +1449,12 @@ languages = \
     "Prolog": {
         "type": "programming",
         "color": "#74283c",
-        "primary_extension": ".prolog",
-        "extensions": [
-            ".pro"
+        "primary_extension": ".prolog"
+    },
+    "ProGuard": {
+        "type": "build",
+        "filenames": [
+            "proguard-rules.pro"
         ]
     },
     "Protocol Buffer": {
@@ -1441,6 +1504,10 @@ languages = \
         "lexer": "Python Traceback",
         "searchable": False,
         "primary_extension": ".pytb"
+    },
+    "QMake": {
+        "type": "build",
+        "primary_extension": ".pro"
     },
     "QML": {
         "type": "markup",
@@ -1523,39 +1590,32 @@ languages = \
         "color": "#cc0088",
         "primary_extension": ".rg"
     },
-    "RPG": {
+    "RPG" : {
         "type": "programming",
-        "ace_mode": "RPG",
-        "color": "#3581bb",
         "primary_extension": ".rpg",
         "extensions": [
             ".rpgle",
-            ".cpyle", 
-            ".bnd", 
-            ".sqlrpgle", 
+            ".cpyle",
+            ".sqlrpgle",
             ".rpglerule",
-            ".rpg", 
-            ".rpg38", 
-            ".sqlrpg", 
-            ".rpgrule", 
-            ".menu", 
-            ".mnu", 
-            ".dds", 
-            ".dspf", 
-            ".prtf", 
-            ".dspf38", 
-            ".prtf38", 
-            ".lf", 
-            ".pf", 
-            ".pf38", 
-            ".lf38", 
+            ".rpg38",
+            ".sqlrpg",
+            ".rpgrule",
             ".cl",
-            ".clp", 
-            ".clle", 
-            ".clp38", 
-            ".cl38"
-        ],
-    },    
+            ".clp",
+            ".clle",
+            ".clp38",
+            ".watchr",
+            ".dspf",
+            ".prtf",
+            ".dspf38",
+            ".prtf38",
+            ".lf",
+            ".pf",
+            ".pf38",
+            ".lf38"
+        ],        
+    },
     "Ruby": {
         "type": "programming",
         "ace_mode": "ruby",
@@ -1597,28 +1657,28 @@ languages = \
         "color": "#dea584",
         "primary_extension": ".rs"
     },
-    
-    "SAP UI Theme Designer": {
-        "ace_mode": "theming",
-        "color": "#1f085e",
-        "primary_extension": ".theming", 
+    "SAP BusinessObjects": {
+        "type": "programming",
+        "primary_extension": ".bxml",
         "extensions": [
-            ".theming",
-            ".library" 
+            ".unv"
         ]
- 
-    },    
+    },
     "SCSS": {
-        "type": "markup",
+        "type": "programming",
         "group": "CSS",
         "ace_mode": "scss",
         "primary_extension": ".scss"
     },
     "SQL": {
-        "type": "data",
+        "type": "programming",
         "ace_mode": "sql",
         "searchable": False,
-        "primary_extension": ".sql"
+        "primary_extension": ".sql",
+        "extensions": [
+            ".ddl"
+        ]
+
     },
     "Sage": {
         "type": "programming",
@@ -1674,14 +1734,7 @@ languages = \
         "primary_extension": ".sh",
         "extensions": [
             ".bats",
-            ".tmux", 
-            ".bsh", 
-            ".ksh", 
-            ".shell", 
-            ".ssh"
-        ],
-        "filenames": [
-            "Dockerfile"
+            ".tmux"
         ]
     },
     "Slash": {
@@ -1771,16 +1824,37 @@ languages = \
         "type": "markup",
         "primary_extension": ".tea"
     },
+    "Text": {
+        "type": "documentation",
+        "primary_extension": ".txt",
+        "filenames": [
+            "README"
+        ]
+    },
     "Textile": {
-        "type": "markup",
+        "type": "documentation",
         "lexer": "Text only",
         "ace_mode": "textile",
         "wrap": True,
         "primary_extension": ".textile"
     },
-    "Tag Library Descriptor": {
+    "TIBCO": {
         "type": "programming",
-        "primary_extension": ".tld",
+        "primary_extension": ".bwp",
+        "extensions": [
+            ".substvar",
+            ".httpclientresource",
+            ".httpconnresource",
+            ".jmsconnresource",
+            ".jdbcresource",
+            ".aeschema",
+            ".sharedjdbc",
+            ".javaschema",
+            ".sharedhttp",
+            ".sharedjmscon",
+            ".process",
+            ".sharedjmsapp"
+        ]
     },
     "Turing": {
         "type": "programming",
@@ -1802,6 +1876,9 @@ languages = \
         "color": "#31859c",
         "aliases": [
             "ts"
+        ],
+        "extensions": [
+            ".tsx",
         ],
         "primary_extension": ".ts"
     },
@@ -1881,7 +1958,7 @@ languages = \
         "primary_extension": ".xc"
     },
     "XML": {
-        "type": "markup",
+        "type": "data",
         "ace_mode": "xml",
         "aliases": [
             "rss",
@@ -1901,7 +1978,6 @@ languages = \
             ".grxml",
             ".jelly",
             ".kml",
-            ".mxml",
             ".plist",
             ".pluginspec",
             ".ps1xml",
@@ -1910,7 +1986,6 @@ languages = \
             ".rdf",
             ".rss",
             ".scxml",
-            ".svg",
             ".tmCommand",
             ".tmLanguage",
             ".tmPreferences",
@@ -1928,11 +2003,10 @@ languages = \
             ".xliff",
             ".xmi",
             ".xul",
-            ".zcml"
+            ".zcml",
+            ".xmi"
         ],
         "filenames": [
-            ".classpath",
-            ".project",
             "phpunit.xml.dist"
         ]
     },
@@ -2021,7 +2095,7 @@ languages = \
         "primary_extension": ".ooc"
     },
     "reStructuredText": {
-        "type": "markup",
+        "type": "documentation",
         "wrap": True,
         "search_term": "rst",
         "aliases": [
@@ -2050,7 +2124,7 @@ languages = \
         "primary_extension": ".prg"
     },
     "XSD": {
-        "type": "programming",
+        "type": "data",
         "primary_extension": ".xsd"
     }
 }
