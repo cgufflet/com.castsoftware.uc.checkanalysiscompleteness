@@ -1,7 +1,7 @@
 '''
 Created on 23 déc. 2015
 
-Take an application and add a worksheet to an excell for unanalyzed files
+Take an application and add a worksheet to an excel for unanalyzed files
 
 @todo : add also existing analyzer for some languages (name and url)
 
@@ -15,7 +15,7 @@ import math
 from sortedcontainers import SortedDict, SortedSet
 from pathlib import PureWindowsPath
 from magic import run_magic
-from linguist import recognise_language
+from linguist import recognise_language, get_language_type, get_primary_file_extension
 from commonpath import CommonPath
 from detect_class_name import search_classes
 
@@ -46,6 +46,8 @@ class Application:
         # file count limits for each root
         self.root_limit = {}
         self.cms_roots = False
+        self.delivery_path = self.application.get_managment_base().get_delivery_path()
+
         self.packages = []
         
         self.file_count_01 = 0
@@ -62,7 +64,9 @@ class Application:
         self.unanalyzed_files = self.__get_unanalysed_files()
          
         self.languages_with_unanalysed_files = SortedSet()
+        self.languages_with_analysed_files = SortedSet()
         self.unanalysed_files_per_languages = SortedDict()
+        self.analysed_files_per_languages = SortedDict()
          
         # get the missing languages
         self.__get_languages()
@@ -75,7 +79,8 @@ class Application:
         """
         Generate a worksheet report for files not analyzed in application
         """
-        
+        # new file report per file extension
+        self.list_files_per_extension(workbook)
         # summary
         percentage, summary = self.summary(workbook)
         
@@ -101,6 +106,8 @@ class Application:
         
         # debug infos
         self.debug(workbook)
+
+
         
         return percentage, percentage_of_new_unanalysed
     
@@ -330,7 +337,7 @@ class Application:
             worksheet.write(line, 2, str(version))
             line += 1
         
-        
+
         worksheet.write(line, 0, 'Root pathes')
         line+= 1
         
@@ -361,7 +368,79 @@ class Application:
         worksheet.write(line, 1, self.file_count_03)
         line+= 1
 
-        
+    def list_files_per_extension(self, workbook):
+        worksheet = workbook.add_worksheet('Files per technology')
+
+        worksheet.write(0, 0, 'File extension')
+        worksheet.write(0, 1, 'Linked Technology')
+        worksheet.write(0, 2, 'Nb Files found')
+        worksheet.write(0, 3, 'Nb Files excluded')
+        worksheet.write(0, 4, 'Nb Files processed')
+        worksheet.write(0, 5, 'Nb Files analyzed')
+        worksheet.write(0, 6, 'Nb Files skipped')
+        worksheet.write(0, 7, 'Nb Files partially analyzed')
+        worksheet.write(0, 8, 'Nb Files Not resolved')
+        worksheet.write(0, 9, 'Analyzed by')
+
+
+        worksheet.set_column(0, 0, 15)
+        worksheet.set_column(0, 1, 20)
+        worksheet.set_column(0, 2, 20)
+        worksheet.set_column(0, 3, 20)
+        worksheet.set_column(0, 4, 20)
+        worksheet.set_column(0, 5, 20)
+        worksheet.set_column(0, 6, 20)
+        worksheet.set_column(0, 7, 20)
+        worksheet.set_column(0, 8, 20)
+        worksheet.set_column(0, 9, 20)
+
+        row = 0
+        list_files = SortedSet()
+        for language in self.unanalysed_files_per_languages:
+            print(language.name)
+
+        for language in self.analysed_files_per_languages:
+            if language.is_programming() and not language.is_useless():
+                row += 1
+                worksheet.write(row, 0, language.get_primary_file_extension())
+                worksheet.write(row, 1, language.name)
+                nb_analyzed_files = len(self.analysed_files_per_languages[language])
+                try:
+                    worksheet.write(row, 2, nb_analyzed_files + len(self.unanalysed_files_per_languages[language]))
+                    worksheet.write(row, 4, nb_analyzed_files + len(self.unanalysed_files_per_languages[language]))
+                except KeyError:
+                    worksheet.write(row, 2, nb_analyzed_files)
+                    worksheet.write(row, 4, nb_analyzed_files)
+                    pass
+                worksheet.write(row, 5, nb_analyzed_files)
+
+                extension = language.has_ua()
+                if extension:
+                    worksheet.write(row, 9, extension[0])
+
+        # loop on languages not analyzed at all
+        for language in self.unanalysed_files_per_languages:
+            if language.is_useless() or not language.is_programming():
+                continue
+
+            if language in self.analysed_files_per_languages:
+                continue
+
+            row += 1
+            worksheet.write(row, 0, language.get_primary_file_extension())
+            worksheet.write(row, 1, language.name)
+            try:
+                worksheet.write(row, 2, len(self.unanalysed_files_per_languages[language]))
+            except KeyError:
+                worksheet.write(row, 4, 0)
+                pass
+            worksheet.write(row, 4, 0)
+            worksheet.write(row, 5, 'N/A')
+            worksheet.write(row, 6, 'N/A')
+            worksheet.write(row, 7, 'N/A')
+            worksheet.write(row, 8, 'N/A')
+
+
     def get_language(self, name):
         """
         Get a language per name.
@@ -454,7 +533,7 @@ class Application:
             for package in app.get_packages():
                 result.add(PureWindowsPath(package.get_path()))
                 self.packages.append(package)
-                
+
             logging.info("Using packages from CMS")
             self.cms_roots = True
             return result
@@ -960,7 +1039,6 @@ class Application:
         files = self.unanalyzed_files
     
         for _file in files:
-            
             language = _file.get_language(self)
             self.languages_with_unanalysed_files.add(language)
             if not language in self.unanalysed_files_per_languages:
@@ -968,7 +1046,16 @@ class Application:
                 self.unanalysed_files_per_languages[language] = SortedSet()
             
             self.unanalysed_files_per_languages[language].add(_file)
-    
+
+        for _file in self.analyzed_files:
+            language = _file.get_language(self)
+            self.languages_with_analysed_files.add(language)
+            if not language in self.analysed_files_per_languages:
+                # sorted also here
+                self.analysed_files_per_languages[language] = SortedSet()
+
+            self.analysed_files_per_languages[language].add(_file)
+
     def __scan_xml_files(self):
         """
         Scan xml files and search for classes names.
@@ -1010,6 +1097,17 @@ class File:
         self.mime_type = None
         # languages recognized by extensions
         self.languages = recognise_language(path)
+        if not self.languages:
+            print("unrecognized language for file '%s'", path )
+        else:
+            try:
+                if self.languages[0][1]['type'] == 'programming':
+                    self.is_programming = True
+                else:
+                    self.is_programming = False
+            except KeyError:
+                self.is_programming = False
+
         self.language = "unknown"
         self.package = package
     
@@ -1125,14 +1223,26 @@ class Language:
         for example : ini, json, css ... 
         """
         
-        useless = {'INI', 
+        useless = {'INF',
+                   'INI',
                    'JSON',
+                   'Puppet',
                    'Tag Library Descriptor',
-                   'XSLT',
-                   'INF',
-                   ''}
+                   'XSLT'
+                   }
         
         return self.name in useless
+
+    def get_language_type(self):
+        return get_language_type(self.name)
+
+    def is_programming(self):
+        return get_language_type(self.name)=="programming"
+
+    def get_primary_file_extension(self):
+        return get_primary_file_extension(self.name)
+
+
 
     def __eq__(self, other):
         return self.name == other.name    
