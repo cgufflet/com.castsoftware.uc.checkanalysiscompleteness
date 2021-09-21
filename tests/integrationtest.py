@@ -9,12 +9,11 @@ logging.root.setLevel(logging.DEBUG)
 
 class TestIntegration(unittest.TestCase):
 
+    """
     def test_Imaging(self):
         engine = create_engine("postgresql+pg8000://operator:CastAIP@localhost:2282/postgres")
 
         run(kb_name='imaging_local', application_name='Imaging', engine=engine)
-
-"""
 
     def test_eCommerce(self):
         engine = create_engine("postgresql+pg8000://operator:CastAIP@localhost:2282/postgres")
@@ -26,11 +25,11 @@ class TestIntegration(unittest.TestCase):
 
         run(kb_name='hr_mgt_local', application_name='HR_MGT', engine=engine)
 
-
+    """
     def test_etraq(self):
         engine = create_engine("postgresql+pg8000://operator:CastAIP@localhost:2282/postgres")
-        run(kb_name='etraq_local', application_name='eTraq', engine=engine)
-"""
+        run(kb_name='etraq_01_local', application_name='eTraq', engine=engine)
+
 
 if __name__ == "__main__":
     unittest.main()

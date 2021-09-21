@@ -12,6 +12,10 @@ Take an application and add a worksheet to an excel for unanalyzed files
 '''
 import os, re, logging
 import math
+
+from deliveryanalyzer import DeliveryFolderAnalyzer
+from determinator import get_extension_from_keywords
+from loganalyzer import LogAnalyzer
 from sortedcontainers import SortedDict, SortedSet
 from pathlib import PureWindowsPath
 from magic import run_magic
@@ -48,31 +52,51 @@ class Application:
         self.cms_roots = False
         self.delivery_path = self.application.get_managment_base().get_delivery_path()
 
+        # TODO : get from CastGlobalSettings.ini
+        self.log_root_path = os.path.expandvars("%ProgramData%\\CAST\\CAST\\Logs\\") + self.application.name
+        # analyze logs
+        for root, dirs, files in os.walk(self.log_root_path):
+            for dir in dirs:
+                if dir.startswith("Execute_Analysis"):
+                    self.last_analysis_path = os.path.join(self.log_root_path, dir)
+
+
         self.packages = []
         
         self.file_count_01 = 0
         self.file_count_02 = 0
         self.file_count_03 = 0
-        
-        # first calculate root path
+
+        # first calculate deployment root path
         self.root_path = self.__get_root_path()
-        
+
+        # then compute list of DMT source location (to see which files have been ignored)
+        self.delivery_root_paths = self.__get_delivery_root_paths()
+
+        self.languages_with_delivered_files = SortedSet()
+        self.delivered_files_per_languages = SortedDict()
+
+        # then get all files from delivery source folders
+        self.all_files = self.__get_all_files()
+
         # then get all the analysed files
         self.analyzed_files = self.__get_analysed_file_pathes()
          
         # then scan folder to find the files that where not taken into account
         self.unanalyzed_files = self.__get_unanalysed_files()
          
+
         self.languages_with_unanalysed_files = SortedSet()
-        self.languages_with_analysed_files = SortedSet()
         self.unanalysed_files_per_languages = SortedDict()
+
+        self.languages_with_analysed_files = SortedSet()
         self.analysed_files_per_languages = SortedDict()
          
         # get the missing languages
         self.__get_languages()
         
         # scan xml files...
-        self.__scan_xml_files()
+        #self.__scan_xml_files()
         
     
     def generate_report(self, workbook):
@@ -369,6 +393,13 @@ class Application:
         line+= 1
 
     def list_files_per_extension(self, workbook):
+
+        # analyze logs
+        logAnalyzer = LogAnalyzer(self.last_analysis_path)
+        logAnalyzer.scan()
+
+
+        # create worksheet
         worksheet = workbook.add_worksheet('Files per technology')
 
         worksheet.write(0, 0, 'File extension')
@@ -376,11 +407,11 @@ class Application:
         worksheet.write(0, 2, 'Nb Files found')
         worksheet.write(0, 3, 'Nb Files excluded')
         worksheet.write(0, 4, 'Nb Files processed')
-        worksheet.write(0, 5, 'Nb Files analyzed')
+        worksheet.write(0, 5, 'Nb Files saved')
         worksheet.write(0, 6, 'Nb Files skipped')
         worksheet.write(0, 7, 'Nb Files partially analyzed')
         worksheet.write(0, 8, 'Nb Files Not resolved')
-        worksheet.write(0, 9, 'Analyzed by')
+        worksheet.write(0, 9, 'Supported by')
 
 
         worksheet.set_column(0, 0, 15)
@@ -396,27 +427,42 @@ class Application:
 
         row = 0
         list_files = SortedSet()
-        for language in self.unanalysed_files_per_languages:
-            print(language.name)
-
         for language in self.analysed_files_per_languages:
             if language.is_programming() and not language.is_useless():
                 row += 1
                 worksheet.write(row, 0, language.get_primary_file_extension())
                 worksheet.write(row, 1, language.name)
                 nb_analyzed_files = len(self.analysed_files_per_languages[language])
-                try:
-                    worksheet.write(row, 2, nb_analyzed_files + len(self.unanalysed_files_per_languages[language]))
-                    worksheet.write(row, 4, nb_analyzed_files + len(self.unanalysed_files_per_languages[language]))
-                except KeyError:
-                    worksheet.write(row, 2, nb_analyzed_files)
-                    worksheet.write(row, 4, nb_analyzed_files)
-                    pass
-                worksheet.write(row, 5, nb_analyzed_files)
+                nb_skipped_files = 0
 
-                extension = language.has_ua()
-                if extension:
-                    worksheet.write(row, 9, extension[0])
+                try:
+                    if language.name == 'JavaScript':
+                        pass
+                    for unanalyzed_files in self.unanalysed_files_per_languages[language]:
+                        path = str(unanalyzed_files.path)
+                        if path in logAnalyzer.files_skipped:
+                            nb_skipped_files +=1
+                except KeyError:
+                    pass
+
+                delivered_files_count = len(self.delivered_files_per_languages[language])
+
+                worksheet.write(row, 2, delivered_files_count)
+
+                try:
+                    unanalysed_files_count = len(self.unanalysed_files_per_languages[language])
+                    worksheet.write(row, 4, nb_analyzed_files + unanalysed_files_count)
+                    worksheet.write(row, 3, delivered_files_count - nb_analyzed_files - unanalysed_files_count)
+                except KeyError:
+                    worksheet.write(row, 4, nb_analyzed_files)
+                    worksheet.write(row, 3, delivered_files_count - nb_analyzed_files )
+                    pass
+
+
+                worksheet.write(row, 5, nb_analyzed_files)
+                worksheet.write(row, 6, nb_skipped_files)
+
+                worksheet.write(row, 9, language.get_extension_id())
 
         # loop on languages not analyzed at all
         for language in self.unanalysed_files_per_languages:
@@ -429,17 +475,27 @@ class Application:
             row += 1
             worksheet.write(row, 0, language.get_primary_file_extension())
             worksheet.write(row, 1, language.name)
+            delivered_files_count = len(self.delivered_files_per_languages[language])
+            worksheet.write(row, 2, delivered_files_count)
+
             try:
-                worksheet.write(row, 2, len(self.unanalysed_files_per_languages[language]))
+                unanalysed_files_count = len(self.unanalysed_files_per_languages[language])
+                worksheet.write(row, 4, unanalysed_files_count)
+                if unanalysed_files_count > delivered_files_count:
+                    worksheet.write(row, 2, unanalysed_files_count)
+                    worksheet.write(row, 3, 0)
+                else:
+                    worksheet.write(row, 3, delivered_files_count - unanalysed_files_count)
+
             except KeyError:
                 worksheet.write(row, 4, 0)
-                pass
-            worksheet.write(row, 4, 0)
+
+
             worksheet.write(row, 5, 'N/A')
             worksheet.write(row, 6, 'N/A')
             worksheet.write(row, 7, 'N/A')
             worksheet.write(row, 8, 'N/A')
-
+            worksheet.write(row, 9, language.get_extension_id())
 
     def get_language(self, name):
         """
@@ -485,19 +541,65 @@ class Application:
         self.file_count_01 = len(unanalysed_files)
 
         # first exclude some useless, already known files
-        unanalysed_files = list(self.__filter_known(unanalysed_files)) 
+        #unanalysed_files = list(self.__filter_known(unanalysed_files))
 
         self.file_count_02 = len(unanalysed_files)
         
         logging.info("Recognizing text files using magic. May take some time...")
         
-        unanalysed_files = self.__filter_text(unanalysed_files)
+        #unanalysed_files = self.__filter_text(unanalysed_files)
         
         self.file_count_03 = len(unanalysed_files)
         logging.info("Found  %s unanalyzed text files", len(unanalysed_files))
         
         return unanalysed_files
-        
+
+    def __get_all_files(self):
+        """
+        Find all files from delivery folders (and not from deployment folder) of an application
+
+        :rtype: collection of File
+
+        They are text files or xml files
+        Some files are excluded by known extensions
+        """
+        all_files = set()
+        # get root path
+        for root in self.delivery_root_paths:
+
+            logging.info("Using Delivery Source root path : %s", root)
+
+            # paranoid : if root path is too short (C: for example) skip
+            if root == PureWindowsPath('C:\\') or root == PureWindowsPath('C:'):
+                logging.info("Source root path found is invalid, aborting.")
+                continue
+
+            logging.info("Scanning Source root path content...")
+            all_files |= self.__scan_all_files(str(root))
+
+        # first exclude some useless, already known files
+        #all_files = list(self.__filter_known(all_files))
+
+        #logging.info("Recognizing text files using magic. May take some time...")
+        #all_files = self.__filter_text(all_files)
+
+        logging.info("Found  %s files", len(all_files))
+
+        logging.info('Scanning languages for all delivered files...')
+        for _file in all_files:
+            language = _file.get_language(self)
+            self.languages_with_delivered_files.add(language)
+            if not language in self.delivered_files_per_languages:
+                # sorted also here
+                self.delivered_files_per_languages[language] = SortedSet()
+
+            self.delivered_files_per_languages[language].add(_file)
+
+        for language in self.languages_with_delivered_files:
+            print ('Count %s : %d' % (language.name, len(self.delivered_files_per_languages[language])))
+
+        return all_files
+
     def __get_root_path(self):
         """
         Access the root source pathes of an application if found.
@@ -580,7 +682,7 @@ class Application:
     
     def __get_analysed_file_pathes(self):
     
-        files = [f for f in self.application.get_files(external=True) if hasattr(f, 'get_path')]
+        files = [f for f in self.application.get_files(external=False) if hasattr(f, 'get_path')]
         return set([File(f.get_path()) for f in files if f.get_path()])
         
     
@@ -1034,11 +1136,9 @@ class Application:
         return result
 
     def __get_languages(self):
-        
-        logging.info('Scanning languages...')
-        files = self.unanalyzed_files
-    
-        for _file in files:
+
+        logging.info('Scanning languages for unanalyzed files...')
+        for _file in self.unanalyzed_files:
             language = _file.get_language(self)
             self.languages_with_unanalysed_files.add(language)
             if not language in self.unanalysed_files_per_languages:
@@ -1047,6 +1147,7 @@ class Application:
             
             self.unanalysed_files_per_languages[language].add(_file)
 
+        logging.info('Scanning languages for analyzed files...')
         for _file in self.analyzed_files:
             language = _file.get_language(self)
             self.languages_with_analysed_files.add(language)
@@ -1085,7 +1186,46 @@ class Application:
             # no XML files
             pass
 
+    def __get_application_guid(self):
+        query = "select field_value from cms_dynamicfields dyn_fields join cms_portf_application apps on (dyn_fields.object_id = apps.object_id and dyn_fields.entity_guid='pmcportfolio.Application' and dyn_fields.field_guid='entry' and apps.object_name='" + self.application.name + "');"
+        result = self.application.get_managment_base().execute_query(query)
+        app_guid = None
+        for guid in result:
+            if app_guid:
+                logging.warn('More than one app guid returned. Returning.')
+                return None
+            else:
+                self.application_uuid = guid[0][5:]
 
+        logging.info('App GUID: ' + self.application_uuid);
+
+        return self.application_uuid
+
+    def __get_version_guid(self):
+        query = "select field_value from cms_dynamicfields dyn_fields join cms_portf_application apps on (dyn_fields.object_id = apps.version_id and dyn_fields.entity_guid='pmcdeliveryunit.ApplicationVersion' and dyn_fields.field_guid='entry' and apps.object_name='" + self.application.name + "');"
+        result = self.application.get_managment_base().execute_query(query)
+        version_guid = None
+        for guid in result:
+            if version_guid:
+                logging.warn('More than one app guid returned. Returning.')
+                return None
+            else:
+                self.version_uuid = guid[0][6:]
+
+        logging.info('version GUID: ' + self.version_uuid);
+
+        return self.version_uuid
+
+    def __get_delivery_root_paths(self):
+        list_root = []
+        # get application and version uuid from management to scan delivery folder
+        application_uuid = self.__get_application_guid()
+        version_uuid = self.__get_version_guid()
+
+        deliveryFolderAnalyzer = DeliveryFolderAnalyzer(self.delivery_path, '{' + application_uuid + '}', '{' + version_uuid + '}')
+        list_root = deliveryFolderAnalyzer.scan()
+
+        return list_root
 
 class File:
     """
@@ -1098,7 +1238,8 @@ class File:
         # languages recognized by extensions
         self.languages = recognise_language(path)
         if not self.languages:
-            print("unrecognized language for file '%s'", path )
+            #print("unrecognized language for file '%s'", path )
+            pass
         else:
             try:
                 if self.languages[0][1]['type'] == 'programming':
@@ -1216,6 +1357,28 @@ class Language:
             return map[self.name]
         except:
             pass
+
+    def get_extension_id(self):
+        determinator_response = get_extension_from_keywords([self.name], "8.3.36")
+        for lang in determinator_response:
+            message = None
+            for i in range(len(determinator_response[lang])):
+                extension_uid = determinator_response[lang][i]['extensionuid']
+                if extension_uid is None:
+                    message = 'Not supported'
+                elif extension_uid == 'com.castsoftware.aip':
+                    # priority to extension above AIP
+                    if message is None:
+                        message = 'AIP'
+                    continue
+                else:
+                    recommended_version = determinator_response[lang][i]['recommendedversion']
+                    if recommended_version is None:
+                        message = extension_uid
+                    else:
+                        message = extension_uid + ' (recommended=' + recommended_version + ')'
+
+        return message
 
     def is_useless(self):
         """
