@@ -436,8 +436,6 @@ class Application:
                 nb_skipped_files = 0
 
                 try:
-                    if language.name == 'JavaScript':
-                        pass
                     for unanalyzed_files in self.unanalysed_files_per_languages[language]:
                         path = str(unanalyzed_files.path)
                         if path in logAnalyzer.files_skipped:
